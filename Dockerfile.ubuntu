@@ -1,0 +1,47 @@
+FROM ubuntu:latest as build
+LABEL author="James Cherry"
+LABEL maintainer="James Cherry <cherry@parallaxsw.com>"
+
+# install basics
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install -y build-essential wget apt-utils git cmake gcc tcl-dev swig4.0 bison flex tcl-tclreadline
+RUN groupadd -g 999 -r build && useradd --no-log-init -r -m -u 999 -g build build && \
+    mkdir /cudd && mkdir /build && chown -R build /build /cudd
+
+WORKDIR /build
+USER build
+# download CUDD
+RUN wget https://www.davidkebo.com/source/cudd_versions/cudd-3.0.0.tar.gz && \
+    tar -xvf cudd-3.0.0.tar.gz && \
+    rm cudd-3.0.0.tar.gz
+
+# install CUDD
+RUN cd cudd-3.0.0 && \
+    ./configure --prefix=/cudd && \
+    make -j$(nproc) && \
+    make install
+
+# copy files and install OpenSTA
+USER root
+RUN mkdir /OpenSTA
+COPY . /OpenSTA
+RUN chown -R build /OpenSTA
+USER build
+RUN cd /OpenSTA && \
+    rm -rf build && mkdir build && \
+    cd build && \
+    cmake .. -DCUDD=/cudd && \
+    make -j$(nproc)
+RUN rm -rf build
+
+FROM ubuntu:latest
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y tcl tcl-tclreadline
+RUN groupadd -g 999 -r opensta && useradd --no-log-init -r -m -u 999 -g opensta opensta
+COPY --from=build /cudd /cudd
+COPY --from=build /OpenSTA /OpenSTA
+
+USER opensta
+# Run sta on entry
+ENTRYPOINT ["/OpenSTA/app/sta"]

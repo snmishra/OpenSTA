@@ -2,3 +2,7 @@
 Dockerfile
 README
 INSTALL
+.git/
+build/
+app/sta
+app/libOpenSTA.*
