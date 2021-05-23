@@ -104,8 +104,8 @@ static int
 tclReadlineInit(Tcl_Interp *interp)
 {
   std::array<const char*, 8> readline_cmds = {
-    "history",
-    "history event",
+    "::history",
+    "::history event",
     "eval $auto_index(::tclreadline::ScriptCompleter)",
     "::tclreadline::readline builtincompleter true",
     "::tclreadline::readline customcompleter ::tclreadline::ScriptCompleter",

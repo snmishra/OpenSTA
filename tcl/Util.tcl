@@ -442,7 +442,7 @@ proc sta_unknown { args } {
       # that presumably loads history.tcl causes the following error:
       # Error: history.tcl, 306 invoked "return" outside of a proc.
       # But this squashes the error.
-      if { [lindex $args 0] == "::history" } {
+      if { [lindex $args 0] in {"::history" "history"} } {
 	return ""
       } else {
 	return [uplevel 1 builtin_unknown $args]
